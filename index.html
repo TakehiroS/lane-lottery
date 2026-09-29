@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>体育大会 レーン抽選</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #ffffff;
+      color: #222;
+
+      font-family:
+        "Yu Gothic",
+        "Hiragino Kaku Gothic ProN",
+        "Meiryo",
+        sans-serif;
+    }
+
+    .app {
+      width: min(1200px, 94%);
+      margin: 0 auto;
+      padding: 30px 0 50px;
+    }
+
+    /* =========================
+       ヘッダー
+    ========================= */
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .small-title {
+      font-size: 15px;
+      letter-spacing: 0.18em;
+      color: #777;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 58px);
+      color: #222;
+    }
+
+    .accent-line {
+      width: 120px;
+      height: 7px;
+      margin: 15px auto 0;
+
+      border-radius: 999px;
+
+      background:
+        linear-gradient(
+          90deg,
+          #ff8fa3,
+          #ffc857,
+          #66d9c4,
+          #72a7ff
+        );
+    }
+
+    /* =========================
+       入力パネル
+    ========================= */
+
+    .input-panel {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 28px;
+
+      background: #f8f9fc;
+      border-radius: 24px;
+
+      box-shadow:
+        0 8px 30px
+        rgba(0,0,0,0.07);
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+
+      margin-bottom: 6px;
+
+      font-weight: bold;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+
+      border: 2px solid #e3e6ec;
+      border-radius: 14px;
+
+      padding: 12px 14px;
+
+      font-size: 17px;
+
+      background: #ffffff;
+
+      outline: none;
+
+      transition: 0.2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #72a7ff;
+    }
+
+    textarea {
+      min-height: 230px;
+      resize: vertical;
+
+      line-height: 1.7;
+    }
+
+    .help {
+      margin-top: 8px;
+
+      font-size: 14px;
+      color: #666;
+    }
+
+    .count {
+      margin-top: 10px;
+
+      font-weight: bold;
+      color: #555;
+    }
+
+    /* =========================
+       ボタン
+    ========================= */
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      gap: 12px;
+
+      margin-top: 22px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+
+      padding: 14px 26px;
+
+      font-size: 17px;
+      font-weight: bold;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s,
+        opacity 0.15s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+
+      transform: none;
+    }
+
+    .draw-button {
+      min-width: 220px;
+
+      color: #ffffff;
+
+      background:
+        linear-gradient(
+          135deg,
+          #4d8dff,
+          #745cff
+        );
+
+      box-shadow:
+        0 8px 20px
+        rgba(89,102,255,0.3);
+    }
+
+    .secondary {
+      color: #444;
+      background: #eceff5;
+    }
+
+    .danger {
+      color: #c94c5f;
+      background: #ffecef;
+    }
+
+    /* =========================
+       メッセージ
+    ========================= */
+
+    .message {
+      min-height: 24px;
+
+      margin-top: 14px;
+
+      text-align: center;
+
+      color: #d14c60;
+
+      font-weight: bold;
+    }
+
+    /* =========================
+       抽選中
+    ========================= */
+
+    #drawingScreen {
+      display: none;
+
+      text-align: center;
+
+      padding: 90px 20px;
+    }
+
+    .drawing-text {
+      font-size:
+        clamp(40px, 8vw, 90px);
+
+      font-weight: bold;
+
+      letter-spacing: 0.08em;
+
+      animation:
+        pulse 0.45s
+        infinite alternate;
+    }
+
+    .drum-text {
+      margin-top: 25px;
+
+      font-size:
+        clamp(20px, 3vw, 34px);
+
+      color: #666;
+    }
+
+    @keyframes pulse {
+
+      from {
+        transform: scale(1);
+      }
+
+      to {
+        transform: scale(1.05);
+      }
+    }
+
+    /* =========================
+       結果画面
+    ========================= */
+
+    #resultPanel {
+      display: none;
+    }
+
+    .race-info {
+      text-align: center;
+
+      margin-bottom: 25px;
+    }
+
+    .race-name {
+      font-size:
+        clamp(24px, 4vw, 42px);
+
+      font-weight: bold;
+    }
+
+    .heat-name {
+      margin-top: 4px;
+
+      font-size:
+        clamp(18px, 2vw, 26px);
+
+      color: #666;
+    }
+
+    .result-title {
+      margin: 18px 0 26px;
+
+      font-size:
+        clamp(26px, 4vw, 46px);
+
+      font-weight: bold;
+
+      text-align: center;
+    }
+
+    /* =========================
+       3×3 レーン表示
+    ========================= */
+
+    .lane-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3, 1fr);
+
+      gap: 20px;
+    }
+
+    .lane {
+      min-height: 180px;
+
+      border-radius: 22px;
+
+      padding: 18px;
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: center;
+      align-items: center;
+
+      box-shadow:
+        0 7px 22px
+        rgba(0,0,0,0.08);
+
+      animation:
+        appear
+        0.35s
+        ease backwards;
+    }
+
+    @keyframes appear {
+
+      from {
+        opacity: 0;
+
+        transform:
+          scale(0.85);
+      }
+
+      to {
+        opacity: 1;
+
+        transform:
+          scale(1);
+      }
+    }
+
+    .lane-number {
+      font-size:
+        clamp(40px, 6vw, 70px);
+
+      font-weight: 900;
+
+      line-height: 1;
+    }
+
+    .lane-label {
+      margin-top: 5px;
+
+      font-size: 14px;
+
+      letter-spacing: 0.16em;
+
+      color: #555;
+    }
+
+    .runner {
+      margin-top: 16px;
+
+      font-size:
+        clamp(22px, 3.3vw, 40px);
+
+      font-weight: bold;
+
+      text-align: center;
+
+      word-break: keep-all;
+    }
+
+    .empty-runner {
+      color: #aaa;
+
+      font-weight: normal;
+    }
+
+    /* レーンカラー */
+
+    .lane:nth-child(1) {
+      background: #eaf4ff;
+    }
+
+    .lane:nth-child(2) {
+      background: #fff4c7;
+    }
+
+    .lane:nth-child(3) {
+      background: #ffe7ed;
+    }
+
+    .lane:nth-child(4) {
+      background: #e5fbf4;
+    }
+
+    .lane:nth-child(5) {
+      background: #ffeddc;
+    }
+
+    .lane:nth-child(6) {
+      background: #eee8ff;
+    }
+
+    .lane:nth-child(7) {
+      background: #e7f0ff;
+    }
+
+    .lane:nth-child(8) {
+      background: #effbdc;
+    }
+
+    .lane:nth-child(9) {
+      background: #ffe5e5;
+    }
+
+    /* =========================
+       全画面
+    ========================= */
+
+    :fullscreen .app {
+      width: 96%;
+
+      padding-top: 20px;
+    }
+
+    :fullscreen .lane {
+      min-height: 190px;
+    }
+
+    /* =========================
+       小さい画面
+    ========================= */
+
+    @media (max-width: 700px) {
+
+      .two-columns {
+        grid-template-columns: 1fr;
+      }
+
+      .lane-grid {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .lane {
+        min-height: 145px;
+      }
+    }
+
+    @media (max-width: 460px) {
+
+      .lane-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =====================
+       入力画面
+  ====================== -->
+
+  <section id="inputScreen">
+
+    <header>
+
+      <div class="small-title">
+        SPORTS FESTIVAL
+      </div>
+
+      <h1>
+        体育大会 レーン抽選
+      </h1>
+
+      <div class="accent-line"></div>
+
+    </header>
+
+
+    <div class="input-panel">
+
+      <div class="two-columns">
+
+        <div>
+
+          <label for="eventName">
+            種目名
+          </label>
+
+          <input
+            id="eventName"
+            type="text"
+            placeholder="例：男子100m"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label for="heatName">
+            組
+          </label>
+
+          <input
+            id="heatName"
+            type="text"
+            placeholder="例：第1組"
+          >
+
+        </div>
+
+      </div>
+
+
+      <label for="names">
+        走者名
+      </label>
+
+      <textarea
+        id="names"
+        placeholder="1行に1人ずつ入力してください
+
+例：
+山田 太郎
+佐藤 花子
+田中 一郎
+鈴木 美咲"
+      ></textarea>
+
+
+      <div class="help">
+        1行に1人ずつ入力してください。
+        最大9名です。
+        Excelからコピー＆ペーストできます。
+      </div>
+
+
+      <div
+        id="runnerCount"
+        class="count"
+      >
+        登録人数：0名
+      </div>
+
+
+      <div class="buttons">
+
+        <button
+          id="drawButton"
+          class="draw-button"
+        >
+          🎲 抽選する
+        </button>
+
+
+        <button
+          id="fullscreenButton"
+          class="secondary"
+        >
+          ⛶ 全画面
+        </button>
+
+
+        <button
+          id="clearButton"
+          class="danger"
+        >
+          入力を消去
+        </button>
+
+      </div>
+
+
+      <div
+        id="message"
+        class="message"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================
+       抽選中
+  ====================== -->
+
+  <section id="drawingScreen">
+
+    <div class="drawing-text">
+      抽選中…
+    </div>
+
+    <div class="drum-text">
+      🥁 ドゥルルルルル……
+    </div>
+
+  </section>
+
+
+  <!-- =====================
+       結果
+  ====================== -->
+
+  <section id="resultPanel">
+
+    <div class="race-info">
+
+      <div
+        id="resultEvent"
+        class="race-name"
+      ></div>
+
+
+      <div
+        id="resultHeat"
+        class="heat-name"
+      ></div>
+
+    </div>
+
+
+    <div class="result-title">
+      🎉 レーン決定！
+    </div>
+
+
+    <div
+      id="laneGrid"
+      class="lane-grid"
+    ></div>
+
+
+    <div class="buttons">
+
+      <button
+        id="againButton"
+        class="draw-button"
+      >
+        🎲 もう一度抽選
+      </button>
+
+
+      <button
+        id="backButton"
+        class="secondary"
+      >
+        ← 入力画面へ戻る
+      </button>
+
+
+      <button
+        id="resultFullscreenButton"
+        class="secondary"
+      >
+        ⛶ 全画面
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+<script>
+
+  /* =========================
+     要素取得
+  ========================= */
+
+  const inputScreen =
+    document.getElementById(
+      "inputScreen"
+    );
+
+  const drawingScreen =
+    document.getElementById(
+      "drawingScreen"
+    );
+
+  const resultPanel =
+    document.getElementById(
+      "resultPanel"
+    );
+
+  const namesInput =
+    document.getElementById(
+      "names"
+    );
+
+  const eventNameInput =
+    document.getElementById(
+      "eventName"
+    );
+
+  const heatNameInput =
+    document.getElementById(
+      "heatName"
+    );
+
+  const runnerCount =
+    document.getElementById(
+      "runnerCount"
+    );
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+  const drawButton =
+    document.getElementById(
+      "drawButton"
+    );
+
+  const clearButton =
+    document.getElementById(
+      "clearButton"
+    );
+
+  const fullscreenButton =
+    document.getElementById(
+      "fullscreenButton"
+    );
+
+  const againButton =
+    document.getElementById(
+      "againButton"
+    );
+
+  const backButton =
+    document.getElementById(
+      "backButton"
+    );
+
+  const resultFullscreenButton =
+    document.getElementById(
+      "resultFullscreenButton"
+    );
+
+  const laneGrid =
+    document.getElementById(
+      "laneGrid"
+    );
+
+
+  /* =========================
+     保存内容復元
+  ========================= */
+
+  eventNameInput.value =
+    localStorage.getItem(
+      "lane_event"
+    ) || "";
+
+  heatNameInput.value =
+    localStorage.getItem(
+      "lane_heat"
+    ) || "";
+
+  namesInput.value =
+    localStorage.getItem(
+      "lane_names"
+    ) || "";
+
+  updateRunnerCount();
+
+
+  /* =========================
+     自動保存
+  ========================= */
+
+  eventNameInput.addEventListener(
+    "input",
+    () => {
+
+      localStorage.setItem(
+        "lane_event",
+        eventNameInput.value
+      );
+    }
+  );
+
+
+  heatNameInput.addEventListener(
+    "input",
+    () => {
+
+      localStorage.setItem(
+        "lane_heat",
+        heatNameInput.value
+      );
+    }
+  );
+
+
+  namesInput.addEventListener(
+    "input",
+    () => {
+
+      localStorage.setItem(
+        "lane_names",
+        namesInput.value
+      );
+
+      updateRunnerCount();
+    }
+  );
+
+
+  /* =========================
+     走者取得
+  ========================= */
+
+  function getRunners() {
+
+    return namesInput.value
+      .split("\n")
+      .map(
+        name => name.trim()
+      )
+      .filter(
+        name => name !== ""
+      );
+  }
+
+
+  /* =========================
+     人数表示
+  ========================= */
+
+  function updateRunnerCount() {
+
+    const runners =
+      getRunners();
+
+    runnerCount.textContent =
+      `登録人数：${runners.length}名`;
+
+    if (
+      runners.length > 9
+    ) {
+
+      runnerCount.textContent +=
+        "　※9名までにしてください";
+
+      runnerCount.style.color =
+        "#d14c60";
+
+    } else {
+
+      runnerCount.style.color =
+        "#555";
+    }
+  }
+
+
+  /* =========================
+     Fisher-Yates
+     シャッフル
+  ========================= */
+
+  function shuffle(array) {
+
+    const copied =
+      [...array];
+
+    for (
+      let i =
+        copied.length - 1;
+
+      i > 0;
+
+      i--
+    ) {
+
+      const j =
+        Math.floor(
+          Math.random()
+          * (i + 1)
+        );
+
+      [
+        copied[i],
+        copied[j]
+
+      ] = [
+
+        copied[j],
+        copied[i]
+
+      ];
+    }
+
+    return copied;
+  }
+
+
+  /* =========================
+     ドラムロール音
+  ========================= */
+
+  function playDrumRoll() {
+
+    try {
+
+      const AudioContext =
+        window.AudioContext
+        ||
+        window.webkitAudioContext;
+
+
+      const audioContext =
+        new AudioContext();
+
+
+      const startTime =
+        audioContext.currentTime;
+
+
+      for (
+        let i = 0;
+        i < 17;
+        i++
+      ) {
+
+        const oscillator =
+          audioContext
+            .createOscillator();
+
+
+        const gain =
+          audioContext
+            .createGain();
+
+
+        oscillator.type =
+          "triangle";
+
+
+        oscillator.frequency.value =
+          80
+          +
+          Math.random()
+          * 50;
+
+
+        const hitTime =
+          startTime
+          +
+          i
+          * 0.115;
+
+
+        gain.gain
+          .setValueAtTime(
+            0.001,
+            hitTime
+          );
+
+
+        gain.gain
+          .exponentialRampToValueAtTime(
+            0.20,
+            hitTime + 0.01
+          );
+
+
+        gain.gain
+          .exponentialRampToValueAtTime(
+            0.001,
+            hitTime + 0.09
+          );
+
+
+        oscillator.connect(
+          gain
+        );
+
+
+        gain.connect(
+          audioContext.destination
+        );
+
+
+        oscillator.start(
+          hitTime
+        );
+
+
+        oscillator.stop(
+          hitTime + 0.1
+        );
+      }
+
+    } catch (error) {
+
+      console.log(
+        "音声を再生できませんでした"
+      );
+    }
+  }
+
+
+  /* =========================
+     抽選
+  ========================= */
+
+  function drawLottery() {
+
+    message.textContent = "";
+
+
+    const runners =
+      getRunners();
+
+
+    if (
+      runners.length === 0
+    ) {
+
+      message.textContent =
+        "走者名を入力してください。";
+
+      return;
+    }
+
+
+    if (
+      runners.length > 9
+    ) {
+
+      message.textContent =
+        "走者は最大9名までです。";
+
+      return;
+    }
+
+
+    /*
+      走者をランダムに並び替え
+    */
+
+    const shuffledRunners =
+      shuffle(
+        runners
+      );
+
+
+    /*
+      使用レーンを決定
+
+      9名 → 1～9
+      8名 → 2～9
+      7名 → 3～9
+      6名 → 4～9
+
+      1レーンから順に空き
+    */
+
+    const activeLanes = [];
+
+
+    const startLane =
+      10
+      -
+      runners.length;
+
+
+    for (
+      let lane =
+        startLane;
+
+      lane <= 9;
+
+      lane++
+    ) {
+
+      activeLanes.push(
+        lane
+      );
+    }
+
+
+    /*
+      走者をレーンに割り当て
+    */
+
+    const assignments = [];
+
+
+    for (
+      let i = 0;
+
+      i <
+      shuffledRunners.length;
+
+      i++
+    ) {
+
+      assignments.push({
+
+        lane:
+          activeLanes[i],
+
+        runner:
+          shuffledRunners[i]
+
+      });
+    }
+
+
+    /*
+      抽選画面
+    */
+
+    inputScreen.style.display =
+      "none";
+
+
+    resultPanel.style.display =
+      "none";
+
+
+    drawingScreen.style.display =
+      "block";
+
+
+    playDrumRoll();
+
+
+    /*
+      2秒後に結果表示
+    */
+
+    setTimeout(
+
+      () => {
+
+        showResult(
+          assignments
+        );
+      },
+
+      2000
+
+    );
+  }
+
+
+  /* =========================
+     結果表示
+  ========================= */
+
+  function showResult(
+    assignments
+  ) {
+
+    drawingScreen.style.display =
+      "none";
+
+
+    resultPanel.style.display =
+      "block";
+
+
+    const eventName =
+      eventNameInput
+        .value
+        .trim();
+
+
+    const heatName =
+      heatNameInput
+        .value
+        .trim();
+
+
+    document
+      .getElementById(
+        "resultEvent"
+      )
+      .textContent =
+        eventName
+        ||
+        "レーン抽選";
+
+
+    document
+      .getElementById(
+        "resultHeat"
+      )
+      .textContent =
+        heatName;
+
+
+    laneGrid.innerHTML =
+      "";
+
+
+    /*
+      1～9レーン表示
+    */
+
+    for (
+      let lane = 1;
+
+      lane <= 9;
+
+      lane++
+    ) {
+
+      const assignment =
+        assignments.find(
+
+          item =>
+            item.lane
+            === lane
+
+        );
+
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "lane";
+
+
+      card.style.animationDelay =
+        `${(lane - 1)
+        * 0.035}s`;
+
+
+      const runnerName =
+        assignment
+        ?
+        assignment.runner
+        :
+        "空き";
+
+
+      const emptyClass =
+        assignment
+        ?
+        ""
+        :
+        "empty-runner";
+
+
+      card.innerHTML = `
+
+        <div class="lane-number">
+          ${lane}
+        </div>
+
+        <div class="lane-label">
+          LANE
+        </div>
+
+        <div class="runner ${emptyClass}">
+          ${escapeHtml(
+            runnerName
+          )}
+        </div>
+
+      `;
+
+
+      laneGrid.appendChild(
+        card
+      );
+    }
+  }
+
+
+  /* =========================
+     HTML安全処理
+  ========================= */
+
+  function escapeHtml(
+    text
+  ) {
+
+    const div =
+      document.createElement(
+        "div"
+      );
+
+
+    div.textContent =
+      text;
+
+
+    return div.innerHTML;
+  }
+
+
+  /* =========================
+     抽選ボタン
+  ========================= */
+
+  drawButton
+    .addEventListener(
+      "click",
+      drawLottery
+    );
+
+
+  /* =========================
+     再抽選
+  ========================= */
+
+  againButton
+    .addEventListener(
+      "click",
+      () => {
+
+        resultPanel.style.display =
+          "none";
+
+
+        inputScreen.style.display =
+          "block";
+
+
+        drawLottery();
+      }
+    );
+
+
+  /* =========================
+     入力画面へ戻る
+  ========================= */
+
+  backButton
+    .addEventListener(
+      "click",
+      () => {
+
+        resultPanel.style.display =
+          "none";
+
+
+        inputScreen.style.display =
+          "block";
+      }
+    );
+
+
+  /* =========================
+     入力消去
+  ========================= */
+
+  clearButton
+    .addEventListener(
+      "click",
+      () => {
+
+        const answer =
+          confirm(
+            "入力した内容をすべて消去しますか？"
+          );
+
+
+        if (
+          !answer
+        ) {
+
+          return;
+        }
+
+
+        eventNameInput.value =
+          "";
+
+
+        heatNameInput.value =
+          "";
+
+
+        namesInput.value =
+          "";
+
+
+        localStorage.removeItem(
+          "lane_event"
+        );
+
+
+        localStorage.removeItem(
+          "lane_heat"
+        );
+
+
+        localStorage.removeItem(
+          "lane_names"
+        );
+
+
+        updateRunnerCount();
+
+
+        message.textContent =
+          "";
+      }
+    );
+
+
+  /* =========================
+     全画面表示
+  ========================= */
+
+  async function
+  toggleFullscreen() {
+
+    try {
+
+      if (
+        !document
+          .fullscreenElement
+      ) {
+
+        await document
+          .documentElement
+          .requestFullscreen();
+
+      } else {
+
+        await document
+          .exitFullscreen();
+      }
+
+    } catch (error) {
+
+      alert(
+        "全画面表示を開始できませんでした。"
+      );
+    }
+  }
+
+
+  fullscreenButton
+    .addEventListener(
+      "click",
+      toggleFullscreen
+    );
+
+
+  resultFullscreenButton
+    .addEventListener(
+      "click",
+      toggleFullscreen
+    );
+
+</script>
+
+</body>
+</html>
